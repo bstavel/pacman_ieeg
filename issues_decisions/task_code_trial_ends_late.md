@@ -6,4 +6,6 @@ I intended for that not be an exit under any circumstance, but maybe it is is be
 
 Here are some examples of trials with this behavior:
 
-![Example](./images/ex1.png)
+![Example1](./images/ex1.png)
+
+![Example2](./images/ex2.png)
