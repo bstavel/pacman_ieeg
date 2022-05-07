@@ -6,4 +6,4 @@ I intended for that not be an exit under any circumstance, but maybe it is is be
 
 Here are some examples of trials with this behavior:
 
-![Example](/home/brooke/Pictures/Screenshots/Screenshot_from_2022-05-06_17-00-42.png)
+![Example](./images/ex1.png)
