@@ -18,7 +18,7 @@
 
 hr10
 
-Epileptic channels: Bl123, OL123
+Epileptic channels: BR123, OL123
 
 GR1,2, 3 are first to get spread but not epileptic also B4,5,6
 
