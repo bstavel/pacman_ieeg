@@ -2,6 +2,8 @@
 
 ## Cleaning
 
+Using MNE to handle and document the cleaning process, see cleaning section for specifics
+
 ## Filtering
 
 I still need to separate out filtering for data cleaning and filtering for the rest of the analysis.
