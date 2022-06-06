@@ -4,6 +4,10 @@
 
 ## Filtering
 
+I still need to separate out filtering for data cleaning and filtering for the rest of the analysis.
+
+I have decided to use welches method for filtering for my analysis of theta in the hippocampus, since I am using FOOF and it seems to be what the Voyteck lab uses. Need to read up on why that may be a bad choice for any reason, but it seems reasonable.
+
 ## Bipolar Rereferencing
 
 ## Baselining
