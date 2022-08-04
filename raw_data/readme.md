@@ -33,3 +33,13 @@ Epileptic channels: D5, D6; E7; J1, J2, J3
 Noisy Channels: I4, I5 (double check, went out half way through)
 
 Bad Epochs: 78-80; 173-175; 441-416; 438-439; 474-476; 564-565; 625-626; 654-656; 690-691; 737-738;  200; 1391-1393
+
+#### LL10
+
+Epileptic Channels: CH25, CH26
+
+Noisy Channels: CH16, CH47, CH28, CH29, CH27, CH24
+
+Bad Epochs: NONE
+
+
