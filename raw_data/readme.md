@@ -42,4 +42,28 @@ Noisy Channels: CH16, CH47, CH28, CH29, CH27, CH24
 
 Bad Epochs: NONE
 
+#### SLCH006
+
+Epileptic/noisy Channels: A1, A10, B4, B5, D6, D7, D8, E9, E10, E11
+
+Notes: No HC electrodes
+
+#### BJH018
+
+Epileptic/noisy Channels: BL1, BL2, BL3, BL4, BL5, CL1, CL2, CL3, CL4, NR1, NR2, NR3, NR4, N5, OR1, OR2, OR3, O$
+
+Notes: No relevant electrodes
+
+#### BJH021
+
+Epileptic/noisy Channels: B1, B2, C1, C2, C3, C4, E8, O1
+
+Notes:
+
+#### LL12
+
+Epileptic/noisy Channels: CH8, CH16, CH17
+
+Notes:
+
 
