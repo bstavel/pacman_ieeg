@@ -2,3 +2,6 @@
 *.da
 *.png
 *.npyt
+*.csv
+*.ipynb_checkpoints*
+*.pdf
