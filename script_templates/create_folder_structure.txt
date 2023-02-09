@@ -1,0 +1,6 @@
+mkdir -p BJH025/behave
+mkdir -p BJH025/ieeg
+mkdir -p BJH025/scripts
+cp ~/pacman/script_templates/bci* BJH025/scripts
+cp ~/pacman/script_templates/states* BJH025/scripts
+cp ~/pacman/script_templates/cleaning* BJH025/scripts
