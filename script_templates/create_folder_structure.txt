@@ -1,6 +1,18 @@
-mkdir -p BJH025/behave
-mkdir -p BJH025/ieeg
-mkdir -p BJH025/scripts
-cp ~/pacman/script_templates/bci* BJH025/scripts
-cp ~/pacman/script_templates/states* BJH025/scripts
-cp ~/pacman/script_templates/cleaning* BJH025/scripts
+mkdir -p BNP01B/behave
+mkdir -p BNP01B/ieeg
+mkdir -p BNP01B/scripts
+cp ~/pacman/script_templates/bci* LL13/scripts
+cp ~/pacman/script_templates/states* LL13/scripts
+cp ~/pacman/script_templates/cleaning* LL13/scripts
+
+
+
+mkdir -p LL12/ieeg
+mkdir -p LL12/scripts
+mkdir -p BJH016/ieeg/last_away
+mkdir -p BJH021/ieeg/trial_onset
+mkdir -p BJH021/ieeg/first_dot
+mkdir -p BJH021/ieeg/trial_end
+cp ~/pacman/script_templates/preprocessing* LL12/scripts
+cp ~/pacman/script_templates/last_away* BJH021/scripts
+cp ~/pacman/script_templates/trial_onset* BJH021/scripts
