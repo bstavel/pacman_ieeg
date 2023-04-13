@@ -127,7 +127,7 @@ The step is with what frequency I save out the power information to a csv. Highe
 
 ### Event tables
 
-I use R to create tables of events that I use to create the MNE epoch objects. The scripts live here:
+I use R to create tables of events that I use to create the MNE epoch objects. The scripts live here: https://github.com/bstavel/pacman_behavior/blob/main/R/create_timelock_event_tables.R
 Here are some small but tricky points
 
 * When merging the tables as metadata in the timelocking scripts, merge the metadata in before you remove bad epochs. This means that I do not filter out bad trials in the R scripts, as I was doing originally. 
