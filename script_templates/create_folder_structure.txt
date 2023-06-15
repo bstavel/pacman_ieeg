@@ -1,9 +1,9 @@
-mkdir -p BNP01B/behave
-mkdir -p BNP01B/ieeg
-mkdir -p BNP01B/scripts
-cp ~/pacman/script_templates/bci* LL13/scripts
-cp ~/pacman/script_templates/states* LL13/scripts
-cp ~/pacman/script_templates/cleaning* LL13/scripts
+mkdir -p BJH029/behave
+mkdir -p BJH029/ieeg
+mkdir -p BJH029/scripts
+cp ~/pacman/script_templates/bci* BJH029/scripts
+cp ~/pacman/script_templates/states* BJH029/scripts
+cp ~/pacman/script_templates/cleaning* BJH029/scripts
 
 
 
@@ -17,3 +17,13 @@ cp ~/pacman/script_templates/preprocessing* LL12/scripts
 cp ~/pacman/script_templates/last_away* BJH021/scripts
 cp ~/pacman/script_templates/trial_onset* BJH021/scripts
 cp ~/pacman/script_templates/trial_end* BJH016/scripts
+
+
+# offload to server
+
+
+mv pacman/preprocessing/SLCH002/ieeg/last_away/*.h5 knight_server/remote/bstavel/pacman/preprocessing/SLCH002/ieeg/last_away/
+find knight_server/remote/bstavel/pacman/preprocessing/BJH016/ieeg/last_away/ -type f -exec sh -c 'ln -s "{}" "pacman/preprocessing/BJH016/ieeg/last_away/$(basename "{}")"' \;
+
+
+
