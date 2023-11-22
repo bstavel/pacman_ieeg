@@ -1,22 +1,22 @@
-mkdir -p BJH029/behave
+mkdir -p BJH017/behave
+mkdir -p BJH017/ieeg
+mkdir -p BJH017/scripts
+cp ~/pacman/script_templates/bci* BJH017/scripts
+cp ~/pacman/script_templates/states* BJH017/scripts
+cp ~/pacman/script_templates/cleaning* BJH017/scripts
+
+
+
 mkdir -p BJH029/ieeg
 mkdir -p BJH029/scripts
-cp ~/pacman/script_templates/bci* BJH029/scripts
-cp ~/pacman/script_templates/states* BJH029/scripts
-cp ~/pacman/script_templates/cleaning* BJH029/scripts
-
-
-
-mkdir -p LL12/ieeg
-mkdir -p LL12/scripts
-mkdir -p BJH016/ieeg/last_away
-mkdir -p BJH016/ieeg/trial_onset
-mkdir -p BJH016/ieeg/first_dot
-mkdir -p BJH016/ieeg/trial_end
-cp ~/pacman/script_templates/preprocessing* LL12/scripts
-cp ~/pacman/script_templates/last_away* BJH021/scripts
-cp ~/pacman/script_templates/trial_onset* BJH021/scripts
-cp ~/pacman/script_templates/trial_end* BJH016/scripts
+mkdir -p BJH029/ieeg/last_away
+mkdir -p BJH029/ieeg/trial_onset
+mkdir -p BJH029/ieeg/first_dot
+mkdir -p BJH029/ieeg/trial_end
+cp ~/pacman/script_templates/preprocessing* BJH029/scripts
+cp ~/pacman/script_templates/last_away* BJH029/scripts
+cp ~/pacman/script_templates/trial_onset* BJH029/scripts
+cp ~/pacman/script_templates/trial_end* BJH029/scripts
 
 
 # offload to server
