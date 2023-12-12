@@ -14,9 +14,13 @@ mkdir -p BJH029/ieeg/trial_onset
 mkdir -p BJH029/ieeg/first_dot
 mkdir -p BJH029/ieeg/trial_end
 cp ~/pacman/script_templates/preprocessing* BJH029/scripts
-cp ~/pacman/script_templates/last_away* BJH029/scripts
-cp ~/pacman/script_templates/trial_onset* BJH029/scripts
-cp ~/pacman/script_templates/trial_end* BJH029/scripts
+
+cp ~/pacman/script_templates/trial_onset.ipynb LL12/scripts/LL12_trial_onset.ipynb
+cp ~/pacman/script_templates/first_move.ipynb LL12/scripts/LL12_first_move.ipynb
+cp ~/pacman/script_templates/first_dot.ipynb LL12/scripts/LL12_first_dot.ipynb
+cp ~/pacman/script_templates/last_away.ipynb LL12/scripts/LL12_last_away.ipynb
+cp ~/pacman/script_templates/ghost_attack.ipynb LL12/scripts/LL12_ghost_attack.ipynb
+cp ~/pacman/script_templates/trial_end.ipynb LL12/scripts/LL12_trial_end.ipynb
 
 
 # offload to server
