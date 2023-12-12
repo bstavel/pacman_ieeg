@@ -20,8 +20,8 @@ import dask.array as da
 
 
 # Set frequencies
-freqs = np.logspace(start = np.log10(1), stop = np.log10(200), num = 90, base = 10, endpoint = True)
-n_cycles = np.logspace(np.log10(2), np.log10(35), base = 10, num = 90)
+freqs = np.logspace(start = np.log10(1), stop = np.log10(150), num = 80, base = 10, endpoint = True)
+n_cycles = np.logspace(np.log10(2), np.log10(30), base = 10, num = 80)
 
 # formulas to check bandwidth and time bin
 band_width = (freqs / n_cycles) * 2
@@ -119,3 +119,45 @@ def rolling_avg_2d(matrix, n, axis=1):
         results.append(avg_row)
     
     return np.array(results)
+
+
+def plot_average_tfr(tfr, title_str, subject, fig_name):
+    """ function to plot TFRs
+    tfr:                        MNE TFR object
+    title_str:                  title of plot, as a string
+    subject:                    subject ID, as a string
+    fig_name:                   name of figure to save, as a string
+    """
+    plt.rcParams['figure.figsize'] = [22, 20]
+    plt.rcParams.update({'font.size': 18})
+
+
+    fig, ax = plt.subplots(figsize = (22, 20))
+    i = ax.imshow(tfr.data.mean(axis = 0).mean(axis = 0), cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[tfr.tmin, tfr.tmax, freqs[0], freqs[-1]], vmin = -1, vmax = 1)
+    ax.set_yticks(np.linspace(np.min(tfr.freqs),np.max(tfr.freqs),len(tfr.freqs))[::2])
+    ax.set_yticklabels(np.round(tfr.freqs)[::2]) 
+    i2 = plt.axvline(x=0, color='black', linestyle='--', linewidth = 5)
+    bar = plt.colorbar(i)
+    ax.set_title(title_str, fontsize=22, fontweight = 'bold')
+    fig.savefig(f'figures/{subject}_average_{fig_name}.png', dpi=600)
+    fig.show()
+
+def plot_channel_tfr(tfr, chix, ch, title_str):
+    """ function to plot TFRs
+    tfr:                        MNE TFR object
+    chix:                       channel index, as an int
+    ch:                         channel name, as a string
+    title_str:                  title of plot, as a string
+    """
+    plt.rcParams['figure.figsize'] = [22, 20]
+    plt.rcParams.update({'font.size': 18})
+
+
+    fig, ax = plt.subplots(figsize = (22, 20))
+    i = ax.imshow(tfr.data[:, chix, :, :].mean(axis = 0), cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[tfr.tmin, tfr.tmax, freqs[0], freqs[-1]], vmin = -2.5, vmax = 2.5)
+    ax.set_yticks(np.linspace(np.min(tfr.freqs),np.max(tfr.freqs),len(tfr.freqs))[::2])
+    ax.set_yticklabels(np.round(tfr.freqs)[::2]) 
+    bar = plt.colorbar(i)
+    i2 = plt.axvline(x=0, color='black', linestyle='--', linewidth = 5)
+    ax.set_title(f"{ch}:  {title_str}")
+    fig.show()
