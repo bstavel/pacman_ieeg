@@ -53,8 +53,11 @@ def log_and_zscore_TFR(TFR, baseline, logflag = True):
     
     print('z-scoring to baseline')
     bix = [a and b for a, b in zip(TFR.times >= baseline[0], TFR.times <= baseline[1])]
-    bmean = TFR.data[:, :, :, bix].mean(axis=3, keepdims=True).mean(axis=0, keepdims=True)
-    bstd = TFR.data[:, :, :, bix].std(axis=3, keepdims=True).std(axis=0, keepdims=True)
+    bmean = np.nanmean(TFR.data[:, :, :, bix], axis=3, keepdims=True)
+    bmean = np.nanmean(bmean, axis=0, keepdims=True)
+    bstd = np.nanstd(TFR.data[:, :, :, bix], axis=3, keepdims=True)
+    bstd = np.nanstd(bstd, axis=0, keepdims=True)
+
     TFR.data = (TFR.data - bmean) / bstd
 
     TFR.data = TFR.data.compute()  # Convert the Dask array back to a NumPy array
@@ -90,7 +93,7 @@ def extract_freqs(lower_freq, higher_freq, freq_band, subdir, ROI, label, TFR, t
             trial_power = np.mean(subb_trial_power, axis = 0)
             channel_df = pd.DataFrame(rolling_avg_2d(trial_power, step))
             channel_df["trial"] = trials
-            channel_df.to_csv(f"/home/brooke/pacman/preprocessing/{sub}/ieeg/{subdir}/{TFR.ch_names[chix]}_{ROI}_trial_{freq_band}_{label}.csv")
+            channel_df.to_csv(f"/home/brooke/pacman/preprocessing/{subdir}/{TFR.ch_names[chix]}_{ROI}_trial_{freq_band}_{label}.csv")
     
     else:
         fidx = np.where((freqs > lower_freq) & (freqs < higher_freq))[0]
@@ -98,7 +101,7 @@ def extract_freqs(lower_freq, higher_freq, freq_band, subdir, ROI, label, TFR, t
             trial_power = TFR.data[:, chix, fidx, :].mean(axis=1)
             channel_df = pd.DataFrame(rolling_avg_2d(trial_power, step))
             channel_df["trial"] = trials
-            channel_df.to_csv(f"/home/brooke/pacman/preprocessing/{sub}/ieeg/{subdir}/{TFR.ch_names[chix]}_{ROI}_trial_{freq_band}_{label}.csv")
+            channel_df.to_csv(f"/home/brooke/pacman/preprocessing/{subdir}/{TFR.ch_names[chix]}_{ROI}_trial_{freq_band}_{label}.csv")
 
 def rolling_avg_2d(matrix, n, axis=1):
     if axis != 1:
@@ -133,6 +136,7 @@ def plot_average_tfr(tfr, title_str, subject, fig_name):
 
 
     fig, ax = plt.subplots(figsize = (22, 20))
+    
     i = ax.imshow(tfr.data.mean(axis = 0).mean(axis = 0), cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[tfr.tmin, tfr.tmax, freqs[0], freqs[-1]], vmin = -1, vmax = 1)
     ax.set_yticks(np.linspace(np.min(tfr.freqs),np.max(tfr.freqs),len(tfr.freqs))[::2])
     ax.set_yticklabels(np.round(tfr.freqs)[::2]) 

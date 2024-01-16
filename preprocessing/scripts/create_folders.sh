@@ -36,7 +36,7 @@ for subject in "${subjects[@]}"; do
     # cp ~/pacman/script_templates/preprocessing.ipynb $HOME/pacman/preprocessing/$subject/scripts/${subject}_preprocessing.ipynb
 
     ## create kngiht server folders
-    mkdir -p "$HOME/knight_server/remote/bstavel/pacman/preprocescsing/$subject/ieeg/trial_onset"
+    mkdir -p "$HOME/knight_server/remote/bstavel/pacman/preprocessing/$subject/ieeg/trial_onset"
     mkdir -p "$HOME/knight_server/remote/bstavel/pacman/preprocessing/$subject/ieeg/first_move"
     mkdir -p "$HOME/knight_server/remote/bstavel/pacman/preprocessing/$subject/ieeg/first_dot"
     mkdir -p "$HOME/knight_server/remote/bstavel/pacman/preprocessing/$subject/ieeg/last_away"
