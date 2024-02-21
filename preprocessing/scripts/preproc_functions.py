@@ -23,9 +23,9 @@ import dask.array as da
 freqs = np.logspace(start = np.log10(1), stop = np.log10(150), num = 80, base = 10, endpoint = True)
 n_cycles = np.logspace(np.log10(2), np.log10(30), base = 10, num = 80)
 
-# formulas to check bandwidth and time bin
-band_width = (freqs / n_cycles) * 2
-time_bin = n_cycles / freqs / np.pi
+# # formulas to check bandwidth and time bin
+# band_width = (freqs / n_cycles) * 2
+# time_bin = n_cycles / freqs / np.pi
 
 def compute_TFR(epochs, freqs, n_cycles, workers = 8):
     """
