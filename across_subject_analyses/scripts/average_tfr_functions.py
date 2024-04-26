@@ -697,7 +697,8 @@ def plot_allsub_averages(array_average, title, fname, min_time, max_time):
     yticks_labels = yticks_labels[::2]
 
     fig, ax = plt.subplots()
-    i = ax.imshow(array_average, cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[min_time, max_time, freqs[0], freqs[-1]], vmin = -1, vmax = 1)
+    i = ax.imshow(array_average, cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[min_time, max_time, freqs[0], freqs[-1]]
+    )
     i2 = plt.axvline(x=0, color='black', linestyle='--')
     ax.set_yticks(yticks[::2])
     ax.set_yticklabels(yticks_labels[::2])
