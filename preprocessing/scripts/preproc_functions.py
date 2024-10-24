@@ -6,9 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from scipy import signal, stats
-import mat73
 import re
-from neurodsp.timefrequency import compute_wavelet_transform
 import os
 import mne
 import IPython
@@ -24,8 +22,8 @@ freqs = np.logspace(start = np.log10(1), stop = np.log10(150), num = 80, base = 
 n_cycles = np.logspace(np.log10(2), np.log10(30), base = 10, num = 80)
 
 # # formulas to check bandwidth and time bin
-# band_width = (freqs / n_cycles) * 2
-# time_bin = n_cycles / freqs / np.pi
+band_width = (freqs / n_cycles) * 2
+time_bin = n_cycles / freqs / np.pi
 
 def compute_TFR(epochs, freqs, n_cycles, workers = 8):
     """

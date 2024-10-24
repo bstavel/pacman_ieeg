@@ -102,7 +102,7 @@ ROIs = {
         'hc'     :['HL1', 'HL2', 'IL1', 'IL2', 'IL3'],
         'ofc'    :['AL6'],
         'amyg'   :['GL1', 'GL2', 'GL3', 'GR1', 'GR2', 'GR3', 'GR4'],
-        'insula' :['LL1', 'LL2', 'CR2', 'CR3', 'BR4', 'BR5', 'BR6', 'BR7'],
+        'insula' :['LL1', 'LL2', 'CL2', 'CL3', 'BL4', 'BL5', 'BL6', 'BL7'],
         'cing'   :['AL1', 'AL2', 'AL3'],
         'sgACC'  :['AL1', 'AL2', 'AL3'],
         'dACC'   :[],
@@ -232,5 +232,95 @@ ROIs = {
         'sfg'    :[]
 
         
-    }        
+    },
+    'BJH046': {
+        'hc'     :['BL1', 'BL2'],
+        'ofc'    :['DL1', 'DL2', 'DL3', 'DL4', 'DL5', 'DL6', 'DL7', 'DL8', 'DL9', 'DL10', 'DL11', 'DL12', 'EL1', 'EL2', 'EL3', 'EL4'],
+        'amyg'   :['AL1', 'AL2', 'AL3', 'AL4'],
+        'insula' :['EL6', 'EL7', 'FL10', 'FL11'],
+        'cing'   :['GL3', 'GL4', 'GL5', 'GL6', 'GL7', 'GL8', 'GL9', 'HL1', 'HL2', 'HL3', 'IL1', 'IL2', 'IL3', 'IR1', 'IR2', 'IR3'],
+        'sgACC'  :[],
+        'dACC'   :['GL3', 'GL4', 'GL5', 'GL6', 'GL7', 'GL8', 'GL9', 'HL1', 'HL2', 'HL3', 'IL1', 'IL2', 'IL3', 'IR1', 'IR2', 'IR3'],
+        'ec'     :[],
+        'dlpfc'  :['GL12', 'HL5', 'HL8', 'HL9', 'HL10', 'HL11', 'LL1', 'LL2', 'LL3', 'LL4', 'LL5', 'LL6', 'LL7', 'LL8', 'ML1', 'ML2', 'ML3', 'ML4', 'ML5', 'ML6', 'ML7', 'ML8', 'ML9', 'ML10', 'NL1', 'NL2', 'NL3', 'NL4', 'NL5', 'NL7', 'NL8', 'NL9', 'NL10'],
+        'mfg'    :['GL12', 'HL8', 'HL9', 'HL10', 'HL11', 'LL6', 'LL7', 'LL8', 'ML8', 'ML9', 'ML10', 'NL9', 'NL10'],
+        'sfg'    :['HL5', 'LL1', 'LL2', 'LL3', 'LL4', 'LL5', 'ML1', 'ML2', 'ML3', 'ML4', 'ML5', 'ML6', 'ML7', 'NL1', 'NL2', 'NL3', 'NL4', 'NL5', 'NL7', 'NL8']
+
+        
+    },    
+    'BJH050': {
+        'hc'     :['BL1', 'BL2', 'BL3', 'BL4', 'BL5', 'BR1', 'BR2', 'BR3', 'CR1', 'CR2', 'CR3', 'GR1', 'GR2'],
+        'ofc'    :['LR1', 'LR2', 'LR3', 'LR4', 'LR6', 'LR8', 'LR9', 'LR10', 'LR11', 'LR12'],
+        'amyg'   :['AR4', 'AR5', 'AR6'],
+        'insula' :['GR2', 'GR3', 'KR3', 'KR4', 'KR5', 'KR6'],
+        'cing'   :['MR1', 'MR2', 'MR3', 'MR4'],
+        'sgACC'  :[],
+        'dACC'   :['MR1', 'MR2', 'MR3', 'MR4'],
+        'ec'     :[],
+        'dlpfc'  :['MR9', 'MR10', 'MR11', 'M12', 'MR13'],
+        'mfg'    :['MR9', 'MR10', 'MR11', 'M12', 'MR13'],
+        'sfg'    :[]
+
+        
+    },  
+    'BJH051': {
+        'hc'     :['BL1', 'BL2', 'BL3', 'BL4', 'BR1', 'BR2', 'CL1', 'CL2', 'CL3', 'CL4', 'CL5'],
+        'ofc'    :['LL1', 'LL2', 'LL3', 'LL4', 'LL5', 'LL6', 'LL7', 'LL8', 'LL9', 'LL10', 'LL11', 'LL12'],
+        'amyg'   :['AL1', 'AL2', 'AL3', 'AL4', 'AL5', 'AL6', 'AR1', 'AR2', 'AR3'],
+        'insula' :['IL4', 'IL5', 'JL4', 'JL5', 'KL2', 'KL3', 'KL4', 'KL5', 'KL6'],
+        'cing'   :['ML1'],
+        'sgACC'  :[],
+        'dACC'   :['ML1'],
+        'ec'     :[],
+        'dlpfc'  :['ML5', 'ML6', 'ML7', 'ML8', 'ML9', 'ML10'],
+        'mfg'    :['ML5', 'ML6', 'ML7', 'ML8', 'ML9', 'ML10'],
+        'sfg'    :[]
+
+        
+    },    
+    'SLCH018': {
+        'hc'     :['`B1', '`B2', '`B3', '`C1', '`C2', '`C3', '`C4', '`C5'],
+        'ofc'    :['`G1', '`G2', '`G3', '`G4', '`G5', '`G6', '`G7', '`G8', '`G9'],
+        'amyg'   :['`A1', '`A2', '`A3', 'A4', '`A5', 'J`1', 'J`2', 'J`3', 'J`4', 'J`5', 'K`1', 'K`2', 'K`3', 'K`4', 'K`5'],
+        'insula' :[],
+        'cing'   :[],
+        'sgACC'  :[],
+        'dACC'   :[],
+        'ec'     :[],
+        'dlpfc'  :[],
+        'mfg'    :[],
+        'sfg'    :[]
+
+        
+    },   
+    'BJH024': {
+        'hc'     :['HL1', 'HL2', 'HL3', 'HL4', 'HL5', 'HR1', 'IL1', 'IL2', 'IL3', 'IL4', 'IR1', 'IR2', 'IR3', 'IR4', 'IR5'],
+        'ofc'    :['AL1', 'AL2', 'AL3', 'AL4', 'AL5', 'AL6', 'AL7', 'AL8', 'AL9', 'AL10', 'AR1', 'AR2', 'AR3', 'AR4', 'AR5', 'AR6', 'AR7', 'AR8', 'AR9', 'BL1', 'BL2', 'BL3', 'BR1', 'BR2', 'BR3', 'BR4'],
+        'amyg'   :['GL1', 'GL2', 'GL3', 'GL4', 'GR1'],
+        'insula' :['CL4', 'CL5', 'CL6', 'CL7', 'CR5', 'CR6', 'CR7', 'CR8', 'GL7', 'GL8', 'GR3', 'GR4'],
+        'cing'   :['BL4', 'BL5', 'BL6', 'BL7', 'BL8', 'BL9', 'BL10', 'BL11', 'BL12', 'BR5', 'BR6', 'BR7', 'BR8', 'BR9', 'BR10'],
+        'sgACC'  :['BL4', 'BL5', 'BL6', 'BL7'],
+        'dACC'   :['BL8', 'BL9', 'BL10', 'BL11', 'BL12'],
+        'ec'     :[],
+        'dlpfc'  :['BL14', 'BL15', 'BL16', 'BR11', 'BR12', 'BR13', 'BR14', 'BR15', 'CL13', 'CL14', 'CL15', 'CL16', 'CR12', 'CR13', 'CR14', 'CR15', 'CR16'],
+        'mfg'    :['CL13', 'CL14', 'CL15', 'CL16', 'CR12', 'CR13', 'CR14', 'CR15', 'CR16'],
+        'sfg'    :['BR11', 'BR12', 'BR13', 'BR14','BL14', 'BL15', 'BL16']
+
+        
+    },    
+    'BJH017': {
+        'hc'     :['BR1', 'BR2', 'BR3', 'BR4', 'BR5', 'BR6', 'BR7', 'CR1', 'CR2', 'CR3', 'CR4', 'CR5', 'CR6', 'CR7', 'OL1', 'OL2', 'OL3', 'OL4', 'OL5', 'OL6'],
+        'ofc'    :['MR4', 'MR6', 'MR7', 'MR8', 'MR9', 'MR10', 'MR12','MR14', 'MR15', 'MR16'],
+        'amyg'   :['AR1', 'AR2', 'AR3', 'AR4', 'AR5'],
+        'insula' :['NR3', 'NR4', 'NR5', 'NR6', 'NR7', 'NR8'],
+        'cing'   :['MR1', 'MR2', 'MR3'],
+        'sgACC'  :['MR1', 'MR2', 'MR3'],
+        'dACC'   :[],
+        'ec'     :[],
+        'dlpfc'  :[],
+        'mfg'    :[],
+        'sfg'    :[]
+
+        
+    }                                      
 }

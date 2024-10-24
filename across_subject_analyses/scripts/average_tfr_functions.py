@@ -1,3 +1,48 @@
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from scipy import signal, stats
+import re
+import os
+import mne
+import IPython
+import seaborn as sns
+import scipy
+import joblib
+import pickle
+import statsmodels
+from statsmodels import stats
+from statsmodels.stats import multitest
+import preproc_functions as pf
+
+# folders
+raw_dir = '/home/brooke/pacman/raw_data'
+preproc_dir = '/home/brooke/pacman/preprocessing'
+tfr_dir = '/home/brooke/knight_server/remote/bstavel/pacman/preprocessing'
+
+def get_roi_elec_lists(ROIs, epochs, roi):
+
+    # prep lists
+    roi_list = []
+    roi_names = []
+    roi_indices = []
+
+    # exclude bad ROI from list
+    pairs_long_name = [ch.split('-') for ch in epochs.info['ch_names']]
+    bidx = len(epochs.info['bads']) +1
+    pairs_name = pairs_long_name[bidx:len(pairs_long_name)]
+
+    # sort ROI into lists
+    for ix in range(0, len(pairs_name)):
+        if pairs_name[ix][0] in ROIs[roi] or pairs_name[ix][1] in ROIs[roi]:
+            roi_list.append(epochs.info['ch_names'][ix + bidx])
+            roi_names.append(pairs_name[ix])
+            roi_indices.append(ix)
+
+    return roi_list, roi_names, roi_indices
+
+
 def calculate_trial_onset_average(sub_list, string_filters, roi, base = (-1,5)):
     """
     Calculates the average TFRs for the TRIAL ONSET condition across subjects,
@@ -37,7 +82,6 @@ def calculate_trial_onset_average(sub_list, string_filters, roi, base = (-1,5)):
                 # load data
                 used_subs.append(subject)
                 tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/trial_onset/{roi}-tfr.h5")
-                tmp_TFR = tmp_TFR[0]
                 # check if metadata exists
                 if tmp_TFR.metadata is None:
 
@@ -66,7 +110,7 @@ def calculate_trial_onset_average(sub_list, string_filters, roi, base = (-1,5)):
                     tmp_TFR.save(f"{tfr_dir}/{subject}/ieeg/trial_onset/{roi}-tfr.h5", overwrite = True)
                 
                 # log and zscore
-                tmp_TFR = log_and_zscore_TFR(tmp_TFR, baseline = base, logflag=True)
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = base, logflag=True)
                     
                 tfr_cases = []
                 for case in string_filters:            
@@ -172,7 +216,7 @@ def calculate_first_move_average(sub_list, string_filters, roi):
                 tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/first_move/{roi}-tfr.h5")
 
                 # zscore and log
-                tmp_TFR = log_and_zscore_TFR(tmp_TFR[0], baseline = (-1,4), logflag=True)
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-1,4), logflag=True)
 
                 tfr_cases = []
                 for case in string_filters:            
@@ -277,7 +321,7 @@ def calculate_first_dot_average(sub_list, string_filters, roi):
                 tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/first_dot/{roi}-tfr.h5")
 
                 # zscore and log
-                tmp_TFR = log_and_zscore_TFR(tmp_TFR[0], baseline = (-1,4), logflag=True)
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-1,4), logflag=True)
 
                 tfr_cases = []
                 for case in string_filters:            
@@ -383,7 +427,7 @@ def calculate_last_away_average(sub_list, string_filters, roi):
                 tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/last_away/{roi}-tfr.h5")
 
                 # zscore and log
-                tmp_TFR = log_and_zscore_TFR(tmp_TFR[0], baseline = (-2,2), logflag=True)
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-2,2), logflag=True)
 
                 tfr_cases = []
                 for case in string_filters:            
@@ -488,7 +532,7 @@ def calculate_ghost_attack_average(sub_list, string_filters, roi):
                 tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5")
 
                 # zscore and log
-                tmp_TFR = log_and_zscore_TFR(tmp_TFR[0], baseline = (-1,3), logflag=True)
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-1,3), logflag=True)
 
                 tfr_cases = []
                 for case in string_filters:            
@@ -593,7 +637,7 @@ def calculate_trial_end_average(sub_list, string_filters, roi):
                 tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/trial_end/{roi}-tfr.h5")
 
                 # zscore and log
-                tmp_TFR = log_and_zscore_TFR(tmp_TFR[0], baseline = (-2.5,2.5), logflag=True)
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-2.5,2.5), logflag=True)
 
                 tfr_cases = []
                 for case in string_filters:            
@@ -657,6 +701,121 @@ def calculate_trial_end_average(sub_list, string_filters, roi):
     return all_subs_averages
 
 
+
+def calculate_last_away_average_subregion(sub_list, string_filters, roi, ROIs, subregion_name):
+    """
+    Calculates the average TFRs for the LAST AWAY condition across subjects,
+    handling potential differences in sampling rates and saving progress for
+    efficiency.
+
+    Args:
+        sub_list (list): A list of subject IDs to process.
+        string_filters (list): A list of strings to filter TFR cases by.
+        roi (str): The name of the region of interest.
+
+    Returns:
+        list: A list of lists containing average TFRs for each string filter.
+
+    Steps:
+        1. Iterates through subjects:
+            - Checks for TFR file existence.
+            - Loads and preprocesses TFR data (log and zscore).
+            - Filters TFR cases based on string_filters.
+            - Calculates mean TFRs for each case and appends to a list.
+            - Handles exceptions and reports any errors.
+        2. Saves intermediate progress to a pickle file.
+        3. Invert list structure for easier processing.
+        4. Calculates average TFRs for each string filter:
+            - Identifies subjects with high or low sampling rates.
+            - Calculates separate means for high and low rate TFRs.
+            - Combines and averages TFRs from different sampling rates if applicable.
+        5. Returns a list of average TFRs for each string filter.
+    """
+    tfrs = []
+    used_subs = []
+    for subject in sub_list:
+
+        try:
+            if os.path.exists(f"{tfr_dir}/{subject}/ieeg/last_away/{roi}-tfr.h5"):
+                # load data
+                used_subs.append(subject)
+                    
+                # load data
+                tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/last_away/{roi}-tfr.h5")
+
+                # zscore and log
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-2,2), logflag=True)
+                        
+                sub_ROIs = ROIs.copy()[subject]
+                        
+                subroi_list, subroi_names, subroi_indices = get_roi_elec_lists(sub_ROIs, tmp_TFR, subregion_name)
+                        
+                # create a new tfr with only the mfg channels
+                subroi_tfr = tmp_TFR.copy().pick_channels(subroi_list)
+
+                tfr_cases = []
+                for case in string_filters:            
+                    # filter
+                    tfr_case = subroi_tfr[case]
+                    # append
+                    tfr_cases.append(tfr_case.data.mean(axis = 0).mean(axis = 0))
+
+                # get mean and append
+                tfrs.append(tfr_cases)
+
+        except Exception as e:
+           print(f"Failed to load {subject}")
+           print(e)
+           used_subs.remove(subject)
+           continue
+
+        print(f"currently used subs: {used_subs}")
+
+    # save progress cuz it is so long to load these dang things       
+    with open(f'../ieeg/last_away_average_{subregion_name}.pkl', 'wb') as f:
+        pickle.dump(tfrs, f)                
+        
+    # invert list so the outer list is the string filter
+    tfrs_cases = [[tfrs[j][i] for j in range(len(tfrs))] for i in range(len(tfrs[0]))]
+
+    all_subs_averages = []
+    for tfr_case in tfrs_cases:
+
+        if any("LL" in subject for subject in sub_list):
+
+            # get indicies of high/low samp rate subs
+            first_ll_sub = [subject for subject in used_subs if "LL" in subject][0]
+            ll_begin = used_subs.index(first_ll_sub)
+
+            # high sampling rate
+            washu_tfrs = np.asarray(tfr_case[0:ll_begin])
+            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
+
+            # Low sampling rate
+            ll_tfrs = np.asarray(tfr_case[ll_begin:])
+            ll_tfrs_mean = ll_tfrs.mean(axis = 0)
+
+            # combine
+            all_subs_tfrs = np.stack((washu_tfrs_mean[:, ::2], ll_tfrs_mean[:, 0:2001]))
+
+            # mean
+            all_subs_average = all_subs_tfrs.mean(axis = 0)
+            all_subs_averages.append(all_subs_average)
+            
+        else:
+            
+            # high sampling rate
+            washu_tfrs = np.asarray(tfr_case)
+            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
+
+            # mean
+            all_subs_average = washu_tfrs_mean
+            all_subs_averages.append(all_subs_average)    
+
+    return all_subs_averages
+
+
+
 def plot_allsub_averages(array_average, title, fname, min_time, max_time):
     """
     Generates and saves a time-frequency plot of the average TFR across all subjects
@@ -685,7 +844,7 @@ def plot_allsub_averages(array_average, title, fname, min_time, max_time):
 
     plt.rcParams['figure.figsize'] = [45, 35]
     plt.rcParams.update({'font.size': 60})
-    matplotlib.rcParams['font.serif'] = 'Times New Roman'
+    matplotlib.rcParams['font.serif'] = 'Gill Sans'
     matplotlib.rcParams['font.family'] = 'serif'
 
     freqs = np.logspace(start = np.log10(1), stop = np.log10(150), num = 80, base = 10, endpoint = True)
@@ -697,8 +856,7 @@ def plot_allsub_averages(array_average, title, fname, min_time, max_time):
     yticks_labels = yticks_labels[::2]
 
     fig, ax = plt.subplots()
-    i = ax.imshow(array_average, cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[min_time, max_time, freqs[0], freqs[-1]]
-    )
+    i = ax.imshow(array_average, cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[min_time, max_time, freqs[0], freqs[-1]], vmin = -.8, vmax = .8)
     i2 = plt.axvline(x=0, color='black', linestyle='--')
     ax.set_yticks(yticks[::2])
     ax.set_yticklabels(yticks_labels[::2])
