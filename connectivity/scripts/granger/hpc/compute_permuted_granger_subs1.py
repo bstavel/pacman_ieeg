@@ -24,14 +24,13 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
     """
     
     # Load neural data
-    last_away_epochs = mne.read_epochs(f"{preproc_data_dir}/{subject}_bp_filtered_clean_last_away_events.fif")
+    last_away_epochs = mne.read_epochs(f"{preproc_data_dir}/ieeg/{subject}_bp_filtered_clean_last_away_events.fif")
 
     # get good epochs
     good_epochs = [i for i,x in enumerate(last_away_epochs.get_annotations_per_epoch()) if not x]
-    bad_epochs  = [i for i,x in enumerate(last_away_epochs.get_annotations_per_epoch()) if x]
 
     # load behavioral data
-    last_away_data = pd.read_csv(f"{preproc_data_dir}/../behave/{subject}_last_away_events.csv")
+    last_away_data = pd.read_csv(f"{preproc_data_dir}/behave/{subject}_last_away_events.csv")
     last_away_epochs.metadata = last_away_data
     
     # only keep good epochs
@@ -81,13 +80,13 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
     granger_df = []
 
     for _, row in subject_sig_df.iterrows():
-        mfg_elec  = row['elec1']
-        cing_elec = row['elec2']
+        first_elec  = row['elec1']
+        second_elec = row['elec2']
         region    = row['roi_pair']
 
         # pick channels
-        elec1_epochs = last_away_epochs.copy().pick_channels([mfg_elec])
-        elec2_epochs = last_away_epochs.copy().pick_channels([cing_elec])
+        elec1_epochs = last_away_epochs.copy().pick_channels([first_elec])
+        elec2_epochs = last_away_epochs.copy().pick_channels([second_elec])
 
         for perm in range(perms):
             # Shuffle the second epoch
@@ -115,7 +114,7 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
                 cwt_freqs   = theta_freqs,
                 cwt_n_cycles= theta_cycles,
                 gc_n_lags   = 12,
-                n_jobs      = 16
+                n_jobs      = 56
             )
 
             # Extract forward/reverse GC
@@ -132,7 +131,7 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
             granger_tmp_df = pd.DataFrame({'times': last_away_epochs.times,
                                            'granger': trgc_favg})
             granger_tmp_df['subject'] = subject
-            granger_tmp_df['pair']    = f"{mfg_elec}-{cing_elec}"
+            granger_tmp_df['pair']    = f"{first_elec}-{second_elec}"
             granger_tmp_df['region']  = region
             granger_tmp_df['perm']    = perm
 
@@ -161,11 +160,11 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
 
 
 ## Prep paths ##
-preproc_data_dir="/global/scratch/users/bstavel/pacman/preprocessing/ieeg"
-granger_dir = "/global/scratch/users/bstavel/pacman/connectivity/granger"
+preproc_data_dir="/global/scratch/users/bstavel/pacman_ieeg/preprocessing_hpc"
+granger_dir = "/global/scratch/users/bstavel/pacman_ieeg/connectivity/scripts/granger"
 
 ## Prep lists ##
-subject_list = ['BJH046', 'BJH050', 'SLCH018', 'BJH051', 'BJH021', 'BJH025', 'BJH016', 'BJH026', 'BJH027', 'BJH029', 'BJH039', 'BJH041', 'LL10', 'LL12', 'LL13', 'LL14', 'LL17', 'LL19', 'SLCH002', 'BJH017']
+subject_list = ['BJH046', 'BJH051', 'BJH026']
 pair_list = ['ofc_mfg', 'amyg_ofc', 'amyg_cing', 'hc_cing']
 
 # load sig pairs
@@ -177,7 +176,7 @@ sig_df = sig_df[sig_df['roi_pair'].isin(pair_list)]
 sig_df['elec1'] = [x.split('_to_')[0] for x in sig_df['pairs']]
 sig_df['elec2'] = [x.split('_to_')[1] for x in sig_df['pairs']]
 
-perms = 200
+perms = 1000
 
 # n_jobs: number of parallel processes to use (choose based on CPU cores)
 results = Parallel(n_jobs=4)(
