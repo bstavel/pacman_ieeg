@@ -180,6 +180,6 @@ perms = 1000
 
 # n_jobs: number of parallel processes to use (choose based on CPU cores)
 results = Parallel(n_jobs=4)(
-    delayed(process_subject)(subject, sig_df, perms)
+    delayed(process_subject)(subject, sig_df, perms, preproc_data_dir, granger_dir)
     for subject in subject_list
 )
