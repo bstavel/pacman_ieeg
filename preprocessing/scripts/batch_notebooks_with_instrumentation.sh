@@ -11,7 +11,7 @@ trap 'echo "Script interrupted by signal"; exit 1' INT TERM
 trap 'echo "An error occurred on line $LINENO"; exit 1' ERR
 
 # subjects=( "BJH021" "BJH025" "BJH016" "SLCH002" "BJH026" "BJH027" "BJH029" "BJH039" "BJH041" "LL10" "LL12" "LL13" "LL14" "LL17" "LL19" )
-subjects=( "BJH046" )
+subjects=( "BJH050" "BJH051" "SLCH018" "BJH017" "BJH046" )
 
 for subject in "${subjects[@]}"; do
     cd "$HOME/pacman/preprocessing/$subject/scripts" || {
@@ -21,8 +21,8 @@ for subject in "${subjects[@]}"; do
 	notebooks=(
         	# "${subject}_first_move.ipynb"
         	# "${subject}_first_dot.ipynb"
-        	"${subject}_last_away.ipynb"
-        	# "${subject}_ghost_attack.ipynb"
+        	# "${subject}_last_away.ipynb"
+        	"${subject}_ghost_attack.ipynb"
         	# "${subject}_trial_end.ipynb"
         	# "${subject}_trial_onset.ipynb"
     	)

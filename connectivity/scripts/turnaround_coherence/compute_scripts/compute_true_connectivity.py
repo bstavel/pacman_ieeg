@@ -28,7 +28,7 @@ from connectivity_functions import *
 
 
 ## Prep paths ##
-subject_list = ['BJH016', 'LL12', 'BJH021', 'BJH025', 'SLCH002']
+subject_list = ['BJH050', 'BJH051']
 
 
 for subject in subject_list:
@@ -53,7 +53,7 @@ for subject in subject_list:
     last_away_epochs = last_away_epochs[good_epochs]
 
     # set attack FLAG
-    attack = ['noghost']
+    attack = ['none']
 
     # load attack events
     ghost_attack_events = pd.read_csv(f"{preproc_data_dir}/../raw_data/{subject}/behave/{subject}_attack_events.csv")
@@ -110,7 +110,7 @@ for subject in subject_list:
     ec_indices = []
 
     # exclude bad ROI from list
-    pairs_long_name = [ch.split('-') for ch in last_away_epochs.info['ch_names']]
+    pairs_long_name = [ch.split('-') for ch in last_away_epochs.pick_types(seeg=True).info['ch_names']]
     bidx = len(last_away_epochs.info['bads']) +1
     pairs_name = pairs_long_name[bidx:len(pairs_long_name)]
 
@@ -201,20 +201,27 @@ for subject in subject_list:
     insula_list = roi_lists[5]
     roi_lists = [hc_list, amyg_list, ofc_list, cing_list, dlpfc_list, insula_list]
 
+    # Filter out empty ROI lists
+    roi_names = ['hc', 'amyg', 'ofc', 'cing', 'dlpfc', 'insula']
+    roi_lists = [hc_list, amyg_list, ofc_list, cing_list, dlpfc_list, insula_list]
+    non_empty_rois = [(roi_name, roi_list) for roi_name, roi_list in zip(roi_names, roi_lists) if roi_list]
+
     # only ROI of interest
-    last_away_hc = last_away_epochs.copy().pick_channels(hc_list)
-    last_away_amyg = last_away_epochs.copy().pick_channels(amyg_list)
-    last_away_ofc = last_away_epochs.copy().pick_channels(ofc_list)
-    last_away_cing = last_away_epochs.copy().pick_channels(cing_list)
-    last_away_dlpfc = last_away_epochs.copy().pick_channels(dlpfc_list)
-    last_away_insula = last_away_epochs.copy().pick_channels(insula_list)
+    roi_epochs_list = []
+    for roi_name, roi_list in non_empty_rois:
+        roi_epochs = last_away_epochs.copy().pick_channels(roi_list)
+        roi_epochs_list.append(roi_epochs)
 
-    ## combine ##
-    last_away_roi = last_away_hc.add_channels([last_away_amyg, last_away_ofc, last_away_cing, last_away_dlpfc, last_away_insula])
+    # Combine non-empty ROI Epochs
+    last_away_roi = roi_epochs_list[0]
+    if len(roi_epochs_list) > 1:
+        last_away_roi = last_away_roi.add_channels(roi_epochs_list[1:])
 
-    ## get indicies for all the noon-symmetric pairs ##
-    first_pair_indices, second_pair_indices = get_indices_of_connectivity_pairs(roi_lists, last_away_roi.info['ch_names'])
-
+    ## get indicies for all the non-symmetric pairs ##
+    roi_lists_non_empty = [roi_list for _, roi_list in non_empty_rois]
+    first_pair_indices, second_pair_indices = get_indices_of_connectivity_pairs(
+        roi_lists_non_empty, last_away_roi.info['ch_names']
+    )
     ## compute connectivity ##
     roi_coherence = compute_coherence(last_away_roi, last_away_roi.info.ch_names, (first_pair_indices, second_pair_indices), theta_freqs, theta_cycles, workers = 16)
 

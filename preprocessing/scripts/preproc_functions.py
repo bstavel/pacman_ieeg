@@ -61,6 +61,50 @@ def log_and_zscore_TFR(TFR, baseline, logflag = True):
     TFR.data = TFR.data.compute()  # Convert the Dask array back to a NumPy array
     return TFR
 
+def extract_highres_freqs(lower_freq, higher_freq, freq_band, subdir, ROI, label, TFR, trials, highres = False):
+    """ function to extract and average the across the freqs within a given band and save out to csvs
+    step is calculated based on getting ~4 samples per frequency cycle
+    
+    lower_freq, higher_freq:    non inclusive lower and upper bounds of the band
+    freq_band:                  band name, as a string
+    subdir:                     dir in sub/ieeg/ that specifies the time locking
+    ROI:                        region name, as a string
+    label:                      label, eg itibase, no itibase, choice locked etc, as a string
+    TFR:                        MNE TFR object
+    """  
+    if highres:
+        # calculate step, every 50ms to match the behavioral data
+        step = int(np.floor(TFR.info['sfreq']/100))
+    else: 
+        # calculate step, every 50ms to match the behavioral data
+        step = int(np.floor(TFR.info['sfreq']/20))
+    
+    # check if it needs to be calculated with subbands
+    if freq_band == 'gamma' or freq_band == 'hfa':
+        
+        subband_dict = {
+            'gamma'    : [(30, 40), (35, 45), (40, 50), (45, 55), (50, 60), (55, 65), (60, 70)],
+            'hfa'      : [(70, 90), (80, 100), (90, 110), (100, 120), (110, 130), (120, 140), (130, 150)]
+        }
+        
+        for chix in range(len(TFR.ch_names)):
+            subb_trial_power = []
+            for subb in subband_dict[freq_band]:
+                fidx = np.where((freqs > subb[0]) & (freqs < subb[1]))[0]
+                subb_trial_power.append(TFR.data[:, chix, fidx, :].mean(axis=1))
+            trial_power = np.mean(subb_trial_power, axis = 0)
+            channel_df = pd.DataFrame(trial_power[:, ::step])
+            channel_df["trial"] = trials
+            channel_df.to_csv(f"/home/brooke/pacman/preprocessing/{subdir}/{TFR.ch_names[chix]}_{ROI}_trial_{freq_band}_{label}.csv")
+    
+    else:
+        fidx = np.where((freqs > lower_freq) & (freqs < higher_freq))[0]
+        for chix in range(len(TFR.ch_names)):
+            trial_power = TFR.data[:, chix, fidx, :].mean(axis=1)
+            channel_df = pd.DataFrame(trial_power[:, ::step])
+            channel_df["trial"] = trials
+            channel_df.to_csv(f"/home/brooke/pacman/preprocessing/{subdir}/{TFR.ch_names[chix]}_{ROI}_trial_{freq_band}_{label}.csv")
+
 def extract_freqs(lower_freq, higher_freq, freq_band, subdir, ROI, label, TFR, trials):
     """ function to extract and average the across the freqs within a given band and save out to csvs
     step is calculated based on getting ~4 samples per frequency cycle
@@ -72,6 +116,7 @@ def extract_freqs(lower_freq, higher_freq, freq_band, subdir, ROI, label, TFR, t
     label:                      label, eg itibase, no itibase, choice locked etc, as a string
     TFR:                        MNE TFR object
     """  
+
     # calculate step, every 50ms to match the behavioral data
     step = int(np.floor(TFR.info['sfreq']/20))
     

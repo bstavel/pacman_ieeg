@@ -14,6 +14,10 @@ import pickle
 import statsmodels
 from statsmodels import stats
 from statsmodels.stats import multitest
+
+## import custom functions
+import sys
+sys.path.append('/home/brooke/pacman/preprocessing/scripts')
 import preproc_functions as pf
 
 # folders
@@ -524,12 +528,15 @@ def calculate_ghost_attack_average(sub_list, string_filters, roi):
     for subject in sub_list:
 
         try:
-            if os.path.exists(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5"):
+            if os.path.exists(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5") or os.path.exists(f"{preproc_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5"):
                 # load data
                 used_subs.append(subject)
                 
                 # load data
-                tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5")
+                try:
+                    tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5")
+                except:
+                    tmp_TFR = mne.time_frequency.read_tfrs(f"{preproc_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5")
 
                 # zscore and log
                 tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-1,3), logflag=True)
@@ -842,8 +849,8 @@ def plot_allsub_averages(array_average, title, fname, min_time, max_time):
         - High-resolution image saving (dpi=400).
     """
 
-    plt.rcParams['figure.figsize'] = [45, 35]
-    plt.rcParams.update({'font.size': 60})
+    plt.rcParams['figure.figsize'] = [6, 4.8]
+    plt.rcParams.update({'font.size': 14})
     matplotlib.rcParams['font.serif'] = 'Gill Sans'
     matplotlib.rcParams['font.family'] = 'serif'
 
@@ -857,9 +864,12 @@ def plot_allsub_averages(array_average, title, fname, min_time, max_time):
 
     fig, ax = plt.subplots()
     i = ax.imshow(array_average, cmap = 'RdBu_r', interpolation="none", origin="lower", aspect = 'auto', extent=[min_time, max_time, freqs[0], freqs[-1]], vmin = -.8, vmax = .8)
-    i2 = plt.axvline(x=0, color='black', linestyle='--')
+    i2 = plt.axvline(x=0, color='#2D2327', linestyle='-')
     ax.set_yticks(yticks[::2])
     ax.set_yticklabels(yticks_labels[::2])
+    ax.tick_params(axis='x', which='major', width = 1, length = 2, pad=2)  # Increase padding between x-ticks and x-axis
+    ax.tick_params(axis='y', which='major', width = 1, length = 2, pad=2)  # Increase padding between y-ticks and y-axis
+
     bar = plt.colorbar(i)
-    ax.set_title(title, fontsize=65, fontweight = "bold", pad=40)
+    ax.set_title(title, fontsize=10, fontweight = "bold", pad=7)
     fig.savefig(fname, dpi=400)
