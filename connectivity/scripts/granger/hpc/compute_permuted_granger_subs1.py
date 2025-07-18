@@ -82,9 +82,12 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
 
     # already computed pairs
     if os.path.exists(out_path):
-        finished_pairs_df = pd.read_csv(out_path)
-        finished_pairs = finished_pairs_df['pair'].unique()
+        granger_df = pd.read_csv(out_path)
+        finished_pairs = granger_df['pair'].unique()
         subject_sig_df = subject_sig_df[~subject_sig_df['pairs'].isin(finished_pairs)]
+    else:
+        # We'll accumulate results in a local DataFrame
+        granger_df = []
 
     # prepare GC indices
     granger_indices = (
@@ -92,8 +95,7 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
         np.array([[1], [0]])   # reverse
     )
 
-    # We'll accumulate results in a local DataFrame
-    granger_df = []
+
 
     for _, row in subject_sig_df.iterrows():
         first_elec  = row['elec1']
