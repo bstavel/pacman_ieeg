@@ -80,14 +80,13 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
     # Filter sig_df for this subject
     subject_sig_df = sig_df[sig_df['subject'] == subject]
 
-    # already computed pairs
     if os.path.exists(out_path):
-        granger_df = pd.read_csv(out_path)
-        finished_pairs = granger_df['pair'].unique()
+        # load the old results into a single‐element list
+        _old = pd.read_csv(out_path)
+        finished_pairs = _old['pair'].unique()
         subject_sig_df = subject_sig_df[~subject_sig_df['pairs'].isin(finished_pairs)]
-    else:
-        # We'll accumulate results in a local DataFrame
-        granger_df = []
+        #  keep granger_df as a list of DataFrames
+        granger_df = [_old]
 
     # prepare GC indices
     granger_indices = (
