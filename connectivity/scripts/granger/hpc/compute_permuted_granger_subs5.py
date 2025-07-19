@@ -87,6 +87,9 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
         subject_sig_df = subject_sig_df[~subject_sig_df['pairs'].isin(finished_pairs)]
         #  keep granger_df as a list of DataFrames
         granger_df = [_old]
+    else:
+        # Initialize an empty list to store DataFrames
+        granger_df = []
 
     # prepare GC indices
     granger_indices = (
