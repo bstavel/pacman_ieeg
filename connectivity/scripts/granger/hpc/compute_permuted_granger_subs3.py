@@ -51,12 +51,16 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
     # filter to the desired condition
     if attack == ['attack']:
         last_away_epochs = last_away_epochs['attack == 1'].copy()
+        out_path = f'{granger_dir}/results/{subject}_null_granger_attack.csv'
     elif attack == ['escape']:
         last_away_epochs = last_away_epochs['attack == 0'].copy()
+        out_path = f'{granger_dir}/results/{subject}_null_granger_escape.csv'
     elif attack == ['ghost']:
         last_away_epochs = last_away_epochs['TrialType <= 16'].copy()
+        out_path = f'{granger_dir}/results/{subject}_null_granger_by_pair_ghost.csv'
     elif attack == ['noghost']:
         last_away_epochs = last_away_epochs['TrialType > 16'].copy()
+        out_path = f'{granger_dir}/results/{subject}_null_granger_all.csv'
 
     # Define frequencies
     freqs     = np.logspace(start=np.log10(1), stop=np.log10(150), num=80, base=10)
@@ -76,8 +80,21 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
     # Filter sig_df for this subject
     subject_sig_df = sig_df[sig_df['subject'] == subject]
 
-    # We'll accumulate results in a local DataFrame
-    granger_df = []
+    if os.path.exists(out_path):
+        # load the old results into a single‐element list
+        _old = pd.read_csv(out_path)
+        finished_pairs = _old['pair'].unique()
+        subject_sig_df = subject_sig_df[~subject_sig_df['pairs'].isin(finished_pairs)]
+        #  keep granger_df as a list of DataFrames
+        granger_df = [_old]
+
+    # prepare GC indices
+    granger_indices = (
+        np.array([[0], [1]]),  # forward
+        np.array([[1], [0]])   # reverse
+    )
+
+
 
     for _, row in subject_sig_df.iterrows():
         first_elec  = row['elec1']
@@ -97,12 +114,6 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
             # Recombine
             last_away_roi = elec1_epochs.copy().add_channels([shuffled_epoch2])
 
-            # Indices for GC
-            granger_indices = (
-                np.array([[0], [1]]),  # row indices
-                np.array([[1], [0]])   # col indices
-            )
-
             # Compute connectivity
             roi_granger = mne_connectivity.spectral_connectivity_epochs(
                 data        = last_away_roi,
@@ -110,7 +121,7 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
                 method      = ['gc', 'gc_tr'],
                 indices     = granger_indices,
                 mode        = 'cwt_morlet',
-                block_size  = 50000,
+                block_size  = 1,
                 cwt_freqs   = theta_freqs,
                 cwt_n_cycles= theta_cycles,
                 gc_n_lags   = 12,
@@ -140,18 +151,6 @@ def process_subject(subject, sig_df, perms, preproc_data_dir, granger_dir):
         # Concatenate
         granger_csv = pd.concat(granger_df, ignore_index=True)
 
-        # Save
-        if attack == ['attack']:
-            out_path = f'{granger_dir}/results/{subject}_null_granger_attack.csv'
-        elif attack == ['escape']:
-            out_path = f'{granger_dir}/results/{subject}_null_granger_escape.csv'
-        elif attack == ['ghost']:
-            out_path = f'{granger_dir}/results/{subject}_null_granger_by_pair_ghost.csv'
-        elif attack == ['noghost']:
-            out_path = f'{granger_dir}/results/{subject}_null_granger_noghost.csv'
-        else:
-            out_path = f'{granger_dir}/results/{subject}_null_granger_all.csv'
-
         granger_csv.to_csv(out_path, index=False)
         print(f"Saved {out_path}")
 
@@ -164,7 +163,7 @@ preproc_data_dir="/global/scratch/users/bstavel/pacman_ieeg/preprocessing_hpc"
 granger_dir = "/global/scratch/users/bstavel/pacman_ieeg/connectivity/scripts/granger"
 
 ## Prep lists ##
-subject_list = ['BJH046', 'BJH050', 'SLCH018', 'BJH051', 'BJH021', 'BJH025', 'BJH016', 'BJH026', 'BJH027', 'BJH029', 'BJH039', 'BJH041', 'LL10', 'LL12', 'LL13', 'LL14', 'LL17', 'LL19', 'SLCH002', 'BJH017']
+subject_list = ['BJH016', 'BJH021', 'BJH029']
 pair_list = ['ofc_mfg', 'amyg_ofc', 'amyg_cing', 'hc_cing']
 
 # load sig pairs
@@ -179,7 +178,7 @@ sig_df['elec2'] = [x.split('_to_')[1] for x in sig_df['pairs']]
 perms = 1000
 
 # n_jobs: number of parallel processes to use (choose based on CPU cores)
-results = Parallel(n_jobs=4)(
-    delayed(process_subject)(subject, sig_df, perms)
+results = Parallel(n_jobs=1)(
+    delayed(process_subject)(subject, sig_df, perms, preproc_data_dir, granger_dir)
     for subject in subject_list
 )
