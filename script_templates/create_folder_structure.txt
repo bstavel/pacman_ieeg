@@ -1,10 +1,10 @@
-mkdir -p BJH050/behave
-mkdir -p BJH050/ieeg
-mkdir -p BJH050/scripts
+mkdir -p BJH073/behave
+mkdir -p BJH073/ieeg
+mkdir -p BJH073/scripts
 
-cp ~/pacman/script_templates/bci* BJH050/scripts
-cp ~/pacman/script_templates/states* BJH050/scripts
-cp ~/pacman/script_templates/cleaning* BJH050/scripts
+cp ~/pacman/script_templates/bci* BJH073/scripts
+cp ~/pacman/script_templates/states* BJH073/scripts
+cp ~/pacman/script_templates/cleaning* BJH073/scripts
 
 
 
