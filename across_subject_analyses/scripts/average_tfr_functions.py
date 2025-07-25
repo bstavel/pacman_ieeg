@@ -23,7 +23,6 @@ import preproc_functions as pf
 # folders
 raw_dir = '/home/brooke/pacman/raw_data'
 preproc_dir = '/home/brooke/pacman/preprocessing'
-tfr_dir = '/home/brooke/knight_server/remote/bstavel/pacman/preprocessing'
 
 def get_roi_elec_lists(ROIs, epochs, roi):
 
@@ -46,96 +45,222 @@ def get_roi_elec_lists(ROIs, epochs, roi):
 
     return roi_list, roi_names, roi_indices
 
-
-def calculate_trial_onset_average(sub_list, string_filters, roi, base = (-1,5)):
+def calculate_trial_onset_average(sub_list, string_filters, tfr_dir, roi,
+                                  base=(-1, 5), ROIs=None, subregion=None):
     """
     Calculates the average TFRs for the TRIAL ONSET condition across subjects,
-    handling potential differences in sampling rates and saving progress for
-    efficiency.
+    handling potential differences in sampling rates and optional subregion selection.
 
     Args:
         sub_list (list): A list of subject IDs to process.
         string_filters (list): A list of strings to filter TFR cases by.
+        tfr_dir (str): Directory containing TFR files.
         roi (str): The name of the region of interest.
+        base (tuple): Baseline window (tmin, tmax) in seconds.
+        ROIs (dict, optional): Mapping of subject -> ROI definitions for subregions.
+        subregion (str, optional): Name of subregion to select within each ROI.
 
     Returns:
         list: A list of lists containing average TFRs for each string filter.
-
-    Steps:
-        1. Iterates through subjects:
-            - Checks for TFR file existence.
-            - Loads and preprocesses TFR data (log and zscore).
-            - Filters TFR cases based on string_filters.
-            - Calculates mean TFRs for each case and appends to a list.
-            - Handles exceptions and reports any errors.
-        2. Saves intermediate progress to a pickle file.
-        3. Invert list structure for easier processing.
-        4. Calculates average TFRs for each string filter:
-            - Identifies subjects with high or low sampling rates.
-            - Calculates separate means for high and low rate TFRs.
-            - Combines and averages TFRs from different sampling rates if applicable.
-        5. Returns a list of average TFRs for each string filter.
-    """    
+    """
     tfrs = []
     used_subs = []
 
     for subject in sub_list:
-
         try:
-            if os.path.exists(f"{tfr_dir}/{subject}/ieeg/trial_onset/{roi}-tfr.h5"):
-                # load data
+            fname = f"{tfr_dir}/{subject}/ieeg/trial_onset/{roi}-tfr.h5"
+            if os.path.exists(fname):
                 used_subs.append(subject)
-                tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/trial_onset/{roi}-tfr.h5")
-                # check if metadata exists
+                tmp_TFR = mne.time_frequency.read_tfrs(fname)
+                tmp_TFR.crop(tmin=base[0], tmax=base[1], include_tmax=True)
+
+                # optionally select a subregion
+                if subregion is not None:
+                    if ROIs is None:
+                        raise ValueError("ROIs must be provided when subregion is specified")
+                    sub_ROIs = ROIs.copy()[subject]
+                    sel_chs, _, _ = get_roi_elec_lists(sub_ROIs, tmp_TFR, subregion)
+                    tmp_TFR = tmp_TFR.pick_channels(sel_chs)
+
+                # only rebuild metadata if missing
                 if tmp_TFR.metadata is None:
+                    trial_onset_epochs = mne.read_epochs(
+                        f"{preproc_dir}/{subject}/ieeg/{subject}_bp_clean_pres-locked_ieeg.fif"
+                    )
+                    good_epochs = [i for i, x in enumerate(
+                        trial_onset_epochs.get_annotations_per_epoch()
+                    ) if not x]
 
-                    # load old pres data to help add metadata
-                    trial_onset_epochs = mne.read_epochs(f"{preproc_dir}/{subject}/ieeg/{subject}_bp_clean_pres-locked_ieeg.fif")
-
-                    # get good epochs (for behavioral data only)
-                    good_epochs = [i for i,x in enumerate(trial_onset_epochs.get_annotations_per_epoch()) if not x]
-
-                    # Create trial metadata 
-                    trial_data = pd.read_csv(f"{raw_dir}/{subject}/behave/{subject}_raw_behave.csv")
+                    trial_data = pd.read_csv(
+                        f"{raw_dir}/{subject}/behave/{subject}_raw_behave.csv"
+                    )
                     trial_data['Trial'] = trial_data['Trial'] - 1
-                    trial_data['TrialType'] = trial_data.groupby('Trial')['TrialType'].transform(lambda x: x.mode().iloc[0])
+                    trial_data['TrialType'] = trial_data.groupby('Trial')['TrialType'] \
+                        .transform(lambda x: x.mode().iloc[0])
                     trial_data = trial_data[['Trial', 'TrialType']].drop_duplicates()
-                    trial_data = trial_data[trial_data['Trial'] >=0]
+                    trial_data = trial_data[trial_data['Trial'] >= 0]
                     trial_data = trial_data[trial_data['Trial'].isin(good_epochs)]
 
-                    # last trial is fake for BJH021
-                    if subject == 'BJH021' or subject == 'LL10' or subject == "LL13" or subject == "LL19" or subject == "BJH039":
-                        tmp_TFR = tmp_TFR[0:-1]
+                    if subject in ('BJH021', 'LL10', 'LL13', 'LL19', 'BJH039'):
+                        tmp_TFR = tmp_TFR[:-1]
 
-                    # set metadata to TFR
                     tmp_TFR.metadata = trial_data
-                    
-                    # save
-                    tmp_TFR.save(f"{tfr_dir}/{subject}/ieeg/trial_onset/{roi}-tfr.h5", overwrite = True)
-                
-                # log and zscore
-                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = base, logflag=True)
-                    
-                tfr_cases = []
-                for case in string_filters:            
-                    # filter
-                    tfr_case = tmp_TFR[case]
-                    # append
-                    tfr_cases.append(tfr_case.data.mean(axis = 0).mean(axis = 0))
+                    tmp_TFR.save(fname, overwrite=True)
 
-                # get mean and append
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline=base, logflag=True)
+
+                tfr_cases = []
+                for case in string_filters:
+                    sel = tmp_TFR[case]
+                    tfr_cases.append(sel.data.mean(axis=0).mean(axis=0))
+
                 tfrs.append(tfr_cases)
 
         except Exception as e:
             print(f"Failed to load {subject}")
             print(e)
-            used_subs.remove(subject)
-            # continue
+            if subject in used_subs:
+                used_subs.remove(subject)
 
         print(f"currently used subs: {used_subs}")
 
-    # save progress cuz it is so long to load these dang things       
-    with open(f'../ieeg/trial_onset_average_{roi}.pkl', 'wb') as f:
+    # save progress
+    suffix = subregion if subregion is not None else roi
+    with open(f'../ieeg/trial_onset_average_{suffix}.pkl', 'wb') as f:
+        pickle.dump(tfrs, f)
+
+    # invert list so the outer list is the string filter
+    tfrs_cases = [[tfrs[j][i] for j in range(len(tfrs))] 
+                  for i in range(len(tfrs[0]))]
+
+    all_subs_averages = []
+    for tfr_case in tfrs_cases:
+        if any('LL' in s for s in used_subs):
+            first_ll_sub = [s for s in used_subs if 'LL' in s][0]
+            ll_begin = used_subs.index(first_ll_sub)
+
+            washu_tfrs = np.asarray(tfr_case[0:ll_begin])
+            washu_tfrs_mean = washu_tfrs.mean(axis=0)
+
+            ll_tfrs = np.asarray(tfr_case[ll_begin:])
+            ll_tfrs_mean = ll_tfrs.mean(axis=0)
+
+            all_subs_tfrs = np.stack((washu_tfrs_mean[:, ::2], ll_tfrs_mean[:, 0:3001]))
+            all_subs_average = all_subs_tfrs.mean(axis=0)
+            all_subs_averages.append(all_subs_average)
+        else:
+            washu_tfrs = np.asarray(tfr_case)
+            washu_tfrs_mean = washu_tfrs.mean(axis=0)
+            all_subs_averages.append(washu_tfrs_mean)
+
+    return all_subs_averages
+
+def calculate_first_move_average(sub_list, string_filters, tfr_dir, roi, ROIs=None, subregion=None):
+    """
+    Calculates the average TFRs for FIRST MOVE condition across subjects,
+    handling potential differences in sampling rates, optional subregion selection,
+    and saving progress for efficiency.
+
+    Args:
+        sub_list (list): A list of subject IDs to process.
+        string_filters (list): A list of strings to filter TFR cases by.
+        tfr_dir (str): Base directory containing TFR files.
+        roi (str): The name of the region of interest.
+        ROIs (dict, optional): Mapping of subject -> ROI definitions for subregions.
+        subregion (str, optional): Name of subregion to select within each ROI.
+
+    Returns:
+        list: A list of lists containing average TFRs for each string filter.
+    """
+    tfrs = []
+    used_subs = []
+
+    for subject in sub_list:
+        tfr_cases = []
+        try:
+            # primary location: single file
+            fname = f"{tfr_dir}/{subject}/ieeg/first_move/{roi}-tfr.h5"
+            if os.path.exists(fname):
+                used_subs.append(subject)
+                tmp_TFR = mne.time_frequency.read_tfrs(fname)
+
+                # optionally select a subregion
+                if subregion is not None:
+                    if ROIs is None:
+                        raise ValueError("ROIs must be provided when subregion is specified")
+                    sub_ROIs = ROIs[subject]
+                    sel_chs, _, _ = get_roi_elec_lists(sub_ROIs, tmp_TFR, subregion)
+                    tmp_TFR = tmp_TFR.pick_channels(sel_chs)
+
+                # z-score and log-transform
+                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline=(-1, 4), logflag=True)
+
+                # apply filters
+                for case in string_filters:
+                    sel = tmp_TFR[case]
+                    tfr_cases.append(sel.data.mean(axis=0).mean(axis=0))
+            else:
+                # backup location: separate ghost/noghost files
+                used_subs.append(subject)
+                ghost_fname = f"/home/brooke/pacman/preprocessing/{subject}/ieeg/first_move/ghost-{roi}-tfr.h5"
+                noghost_fname = f"/home/brooke/pacman/preprocessing/{subject}/ieeg/first_move/noghost-{roi}-tfr.h5"
+                ghost_TFR = mne.time_frequency.read_tfrs(ghost_fname)
+                noghost_TFR = mne.time_frequency.read_tfrs(noghost_fname)
+
+                # optionally select subregion
+                if subregion is not None:
+                    if ROIs is None:
+                        raise ValueError("ROIs must be provided when subregion is specified")
+                    sub_ROIs = ROIs[subject]
+                    sel_chs, _, _ = get_roi_elec_lists(sub_ROIs, ghost_TFR, subregion)
+                    ghost_TFR = ghost_TFR.pick_channels(sel_chs)
+                    noghost_TFR = noghost_TFR.pick_channels(sel_chs)
+
+                # append pre-computed cases
+                tfr_cases.append(ghost_TFR.data.mean(axis=0))
+                tfr_cases.append(noghost_TFR.data.mean(axis=0))
+
+            tfrs.append(tfr_cases)
+
+        except Exception as e:
+            print(f"Failed to load {subject}")
+            print(e)
+            if subject in used_subs:
+                used_subs.remove(subject)
+            continue
+
+        print(f"currently used subs: {used_subs}")
+
+    # save progress
+    suffix = subregion if subregion is not None else roi
+    with open(f'../ieeg/first_move_average_{suffix}.pkl', 'wb') as f:
+        pickle.dump(tfrs, f)
+
+    # invert list so the outer list is the string filter
+    tfrs_cases = [[tfrs[j][i] for j in range(len(tfrs))]
+                  for i in range(len(tfrs[0]))]
+
+    all_subs_averages = []
+    for tfr_case in tfrs_cases:
+        if any('LL' in s for s in used_subs):
+            first_ll = [s for s in used_subs if 'LL' in s][0]
+            ll_begin = used_subs.index(first_ll)
+
+            # high sampling rate
+            washu = np.asarray(tfr_case[:ll_begin]).mean(axis=0)
+            ll = np.asarray(tfr_case[ll_begin:]).mean(axis=0)
+            combined = np.stack((washu[:, ::2], ll[:, :2501]))
+            all_subs_average = combined.mean(axis=0)
+            all_subs_averages.append(all_subs_average)
+        else:
+            all_subs_average = np.asarray(tfr_case).mean(axis=0)
+            all_subs_averages.append(all_subs_average)
+
+    return all_subs_averages
+
+    # save progress
+    suffix = subregion if subregion is not None else roi
+    with open(f'../ieeg/first_move_average_{suffix}.pkl', 'wb') as f:
         pickle.dump(tfrs, f)
 
     # invert list so the outer list is the string filter
@@ -143,145 +268,21 @@ def calculate_trial_onset_average(sub_list, string_filters, roi, base = (-1,5)):
 
     all_subs_averages = []
     for tfr_case in tfrs_cases:
+        if any('LL' in s for s in used_subs):
+            first_ll = [s for s in used_subs if 'LL' in s][0]
+            ll_begin = used_subs.index(first_ll)
 
-        if any("LL" in subject for subject in used_subs):
-
-            # get indicies of high/low samp rate subs
-            first_ll_sub = [subject for subject in used_subs if "LL" in subject][0]
-            ll_begin = used_subs.index(first_ll_sub)
-
-            # high sampling rate
-            washu_tfrs = np.asarray(tfr_case[0:ll_begin])
-            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
-
-            # Low sampling rate
-            ll_tfrs = np.asarray(tfr_case[ll_begin:])
-            ll_tfrs_mean = ll_tfrs.mean(axis = 0)
-
-            # combine
-            all_subs_tfrs = np.stack((washu_tfrs_mean[:, ::2], ll_tfrs_mean[:, 0:3001]))
-        
-            # mean
-            all_subs_average = all_subs_tfrs.mean(axis = 0)
+            washu = np.asarray(tfr_case[:ll_begin]).mean(axis=0)
+            ll = np.asarray(tfr_case[ll_begin:]).mean(axis=0)
+            combined = np.stack((washu[:, ::2], ll[:, :2501]))
+            all_subs_average = combined.mean(axis=0)
             all_subs_averages.append(all_subs_average)
-            
         else:
-            
-            # high sampling rate
-            washu_tfrs = np.asarray(tfr_case)
-            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
-
-            # mean
-            all_subs_average = washu_tfrs_mean
-            all_subs_averages.append(all_subs_average)    
+            all_subs_average = np.asarray(tfr_case).mean(axis=0)
+            all_subs_averages.append(all_subs_average)
 
     return all_subs_averages
 
-def calculate_first_move_average(sub_list, string_filters, roi):
-    """
-    Calculates the average TFRs for FIRST MOVE condition across subjects,
-    handling potential differences in sampling rates and saving progress for
-    efficiency.
-
-    Args:
-        sub_list (list): A list of subject IDs to process.
-        string_filters (list): A list of strings to filter TFR cases by.
-        roi (str): The name of the region of interest.
-
-    Returns:
-        list: A list of lists containing average TFRs for each string filter.
-
-    Steps:
-        1. Iterates through subjects:
-            - Checks for TFR file existence.
-            - Loads and preprocesses TFR data (log and zscore).
-            - Filters TFR cases based on string_filters.
-            - Calculates mean TFRs for each case and appends to a list.
-            - Handles exceptions and reports any errors.
-        2. Saves intermediate progress to a pickle file.
-        3. Invert list structure for easier processing.
-        4. Calculates average TFRs for each string filter:
-            - Identifies subjects with high or low sampling rates.
-            - Calculates separate means for high and low rate TFRs.
-            - Combines and averages TFRs from different sampling rates if applicable.
-        5. Returns a list of average TFRs for each string filter.
-    """
-
-    tfrs = []
-    used_subs = []
-    for subject in sub_list:
-
-        try:
-            if os.path.exists(f"{tfr_dir}/{subject}/ieeg/first_move/{roi}-tfr.h5"):
-                # load data
-                used_subs.append(subject)
-                
-                # load data
-                tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/first_move/{roi}-tfr.h5")
-
-                # zscore and log
-                tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-1,4), logflag=True)
-
-                tfr_cases = []
-                for case in string_filters:            
-                    # filter
-                    tfr_case = tmp_TFR[case]
-                    # append
-                    tfr_cases.append(tfr_case.data.mean(axis = 0).mean(axis = 0))
-
-                # get mean and append
-                tfrs.append(tfr_cases)
-
-        except Exception as e:
-            print(f"Failed to load {subject}")
-            print(e)
-            used_subs.remove(subject)
-            continue
-
-        print(f"currently used subs: {used_subs}")
-
-    # save progress cuz it is so long to load these dang things       
-    with open(f'../ieeg/first_move_average_{roi}.pkl', 'wb') as f:
-        pickle.dump(tfrs, f)                
-        
-    # invert list so the outer list is the string filter
-    tfrs_cases = [[tfrs[j][i] for j in range(len(tfrs))] for i in range(len(tfrs[0]))]
-
-    all_subs_averages = []
-    for tfr_case in tfrs_cases:
-
-        if any("LL" in subject for subject in sub_list):
-
-            # get indicies of high/low samp rate subs
-            first_ll_sub = [subject for subject in used_subs if "LL" in subject][0]
-            ll_begin = used_subs.index(first_ll_sub)
-
-            # high sampling rate
-            washu_tfrs = np.asarray(tfr_case[0:ll_begin])
-            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
-
-            # Low sampling rate
-            ll_tfrs = np.asarray(tfr_case[ll_begin:])
-            ll_tfrs_mean = ll_tfrs.mean(axis = 0)
-
-            # combine
-            all_subs_tfrs = np.stack((washu_tfrs_mean[:, ::2], ll_tfrs_mean[:, 0:2501]))
-        
-            # mean
-            all_subs_average = all_subs_tfrs.mean(axis = 0)
-            all_subs_averages.append(all_subs_average)
-            
-        else:
-            
-            # high sampling rate
-            washu_tfrs = np.asarray(tfr_case)
-            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
-
-            # mean
-            all_subs_average = washu_tfrs_mean
-            all_subs_averages.append(all_subs_average)    
-
-    return all_subs_averages
 
 def calculate_first_dot_average(sub_list, string_filters, roi):
     """
