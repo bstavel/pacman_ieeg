@@ -64,7 +64,6 @@ def compute_pvals_for_group(group):
 
 
 
-
 # load in true data
 granger_path = f'/home/brooke/pacman/connectivity/ieeg/granger/all_subs_all_roi_true_granger.csv'
 
@@ -78,12 +77,6 @@ granger = granger[(granger['times'] >= -1.5) & (granger['times'] <= 1.5)]
 ## Prep paths ##
 subject_list = ['BJH046', 'BJH050', 'SLCH018', 'BJH051', 'BJH021', 'BJH025', 'BJH016', 'BJH026', 'BJH027', 'BJH029', 'BJH039', 'BJH041', 'LL10', 'LL12', 'LL13', 'LL14', 'LL17', 'LL19', 'SLCH002', 'BJH017']
 pair_list = ['ofc_cing', 'ofc_mfg', 'amyg_ofc', 'amyg_cing', 'amyg_mfg', 'hc_amyg', 'hc_ofc', 'hc_mfg', 'hc_cing', 'mfg_cing']
-
-
-# load sig pairs
-sig_df = pd.read_csv('/home/brooke/pacman/connectivity/sig_theta_pairs.csv')
-sig_df = sig_df[sig_df['metric'] == "Imaginary Coherence"]
-sig_df = sig_df[sig_df['roi_pair'].isin(pair_list)]
 
 for subject in granger['subject'].unique():
 
@@ -109,7 +102,6 @@ for subject in granger['subject'].unique():
         all_sub_true_granger = sub_true_granger
     else:
         all_sub_true_granger = pd.concat([all_sub_true_granger, sub_true_granger])
-
 
 
 ## save out
