@@ -166,8 +166,8 @@ preproc_data_dir="/global/scratch/users/bstavel/pacman_ieeg/preprocessing_hpc"
 granger_dir = "/global/scratch/users/bstavel/pacman_ieeg/connectivity/scripts/granger"
 
 ## Prep lists ##
-subject_list = ['LL19', 'BJH027']
-pair_list = ['ofc_mfg', 'amyg_ofc', 'amyg_cing', 'hc_cing']
+subject_list = ['BJH050', 'SLCH018', 'BJH051', 'BJH021', 'BJH025', 'BJH016', 'BJH026', 'BJH027', 'BJH029']
+pair_list = ['mfg_cing']
 
 # load sig pairs
 sig_df = pd.read_csv(f'{granger_dir}/sig_theta_pairs.csv')

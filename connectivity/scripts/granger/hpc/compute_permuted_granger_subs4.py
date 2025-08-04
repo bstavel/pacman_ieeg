@@ -167,7 +167,7 @@ granger_dir = "/global/scratch/users/bstavel/pacman_ieeg/connectivity/scripts/gr
 
 ## Prep lists ##
 subject_list = ['LL14']
-pair_list = ['ofc_mfg', 'amyg_ofc', 'amyg_cing', 'hc_cing']
+pair_list = ['ofc_mfg', 'amyg_ofc', 'amyg_cing', 'mfg_cing']
 
 # load sig pairs
 sig_df = pd.read_csv(f'{granger_dir}/sig_theta_pairs.csv')
