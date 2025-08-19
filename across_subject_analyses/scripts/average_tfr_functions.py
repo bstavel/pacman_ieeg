@@ -19,6 +19,7 @@ from statsmodels.stats import multitest
 import sys
 sys.path.append('/home/brooke/pacman/preprocessing/scripts')
 import preproc_functions as pf
+from roi import ROIs
 
 # folders
 raw_dir = '/home/brooke/pacman/raw_data'
@@ -495,7 +496,7 @@ def calculate_last_away_average(sub_list, string_filters, roi):
 
     return all_subs_averages
 
-def calculate_ghost_attack_average(sub_list, string_filters, roi):
+def calculate_ghost_attack_average(sub_list, tfr_dir, string_filters, roi):
     """
     Calculates the average TFRs for the GHOST ATTACK condition across subjects,
     handling potential differences in sampling rates and saving progress for
@@ -821,6 +822,124 @@ def calculate_last_away_average_subregion(sub_list, string_filters, roi, ROIs, s
             all_subs_averages.append(all_subs_average)    
 
     return all_subs_averages
+
+def calculate_subregion_ghost_attack_average(sub_list, string_filters, roi, subregion_name, ROIs = ROIs):
+    """
+    Calculates the average TFRs for the GHOST ATTACK condition across subjects,
+    handling potential differences in sampling rates and saving progress for
+    efficiency.
+
+    Args:
+        sub_list (list): A list of subject IDs to process.
+        string_filters (list): A list of strings to filter TFR cases by.
+        roi (str): The name of the region of interest.
+
+    Returns:
+        list: A list of lists containing average TFRs for each string filter.
+
+    Steps:
+        1. Iterates through subjects:
+            - Checks for TFR file existence.
+            - Loads and preprocesses TFR data (log and zscore).
+            - Filters TFR cases based on string_filters.
+            - Calculates mean TFRs for each case and appends to a list.
+            - Handles exceptions and reports any errors.
+        2. Saves intermediate progress to a pickle file.
+        3. Invert list structure for easier processing.
+        4. Calculates average TFRs for each string filter:
+            - Identifies subjects with high or low sampling rates.
+            - Calculates separate means for high and low rate TFRs.
+            - Combines and averages TFRs from different sampling rates if applicable.
+        5. Returns a list of average TFRs for each string filter.
+    """    
+    tfrs = []
+    used_subs = []
+    for subject in sub_list:
+
+        # try:
+        if os.path.exists(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5") or os.path.exists(f"{preproc_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5"):
+            # load data
+            used_subs.append(subject)
+            
+            # load data
+            try:
+                tmp_TFR = mne.time_frequency.read_tfrs(f"{tfr_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5")
+            except:
+                tmp_TFR = mne.time_frequency.read_tfrs(f"{preproc_dir}/{subject}/ieeg/ghost_attack/{roi}-tfr.h5")
+
+            # zscore and log
+            tmp_TFR = pf.log_and_zscore_TFR(tmp_TFR, baseline = (-1,3), logflag=True)
+
+            ## MONICA TODO
+            # need to calculate mfg_tfr and replace tmp_TFR with mfg_tfr
+            sub_ROIs = ROIs.copy()[subject]
+
+            subroi_list, subroi_names, subroi_indices = get_roi_elec_lists(sub_ROIs, tmp_TFR, subregion_name)
+            
+            # create a new tfr with only the mfg channels
+            subroi_tfr = tmp_TFR.copy().pick_channels(subroi_list)
+            
+            tfr_cases = []
+            for case in string_filters:            
+                # filter
+                tfr_case = subroi_tfr[case]
+                # append
+                tfr_cases.append(tfr_case.data.mean(axis = 0).mean(axis = 0))
+
+            # get mean and append
+            tfrs.append(tfr_cases)
+
+        # except Exception as e:
+        #     print(f"Failed to load {subject}")
+        #     print(e)
+        #     used_subs.remove(subject)
+        #     continue
+
+        print(f"currently used subs: {used_subs}")
+
+    # save progress cuz it is so long to load these dang things       
+    with open(f'../ieeg/ghost_attack_average_{subregion_name}.pkl', 'wb') as f:
+        pickle.dump(tfrs, f)                
+        
+    # invert list so the outer list is the string filter
+    tfrs_cases = [[tfrs[j][i] for j in range(len(tfrs))] for i in range(len(tfrs[0]))]
+
+    all_subs_averages = []
+    for tfr_case in tfrs_cases:
+
+        if any("LL" in subject for subject in used_subs):
+
+            # get indicies of high/low samp rate subs
+            first_ll_sub = [subject for subject in used_subs if "LL" in subject][0]
+            ll_begin = used_subs.index(first_ll_sub)
+
+            # high sampling rate
+            washu_tfrs = np.asarray(tfr_case[0:ll_begin])
+            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
+
+            # Low sampling rate
+            ll_tfrs = np.asarray(tfr_case[ll_begin:])
+            ll_tfrs_mean = ll_tfrs.mean(axis = 0)
+
+            # combine
+            all_subs_tfrs = np.stack((washu_tfrs_mean[:, ::2], ll_tfrs_mean[:, 0:2001]))
+        
+            # mean
+            all_subs_average = all_subs_tfrs.mean(axis = 0)
+            all_subs_averages.append(all_subs_average)
+            
+        else:
+            
+            # high sampling rate
+            washu_tfrs = np.asarray(tfr_case)
+            washu_tfrs_mean = washu_tfrs.mean(axis = 0)
+
+            # mean
+            all_subs_average = washu_tfrs_mean
+            all_subs_averages.append(all_subs_average)    
+
+    return all_subs_averages
+
 
 
 
