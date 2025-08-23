@@ -166,7 +166,7 @@ preproc_data_dir="/global/scratch/users/bstavel/pacman_ieeg/preprocessing_hpc"
 granger_dir = "/global/scratch/users/bstavel/pacman_ieeg/connectivity/scripts/granger"
 
 ## Prep lists ##
-subject_list = ['LL17', 'LL19', 'SLCH002', 'BJH017']
+subject_list = ['LL12', 'LL13']
 pair_list = ['mfg_cing']
 
 # load sig pairs
