@@ -5,41 +5,11 @@
 ### For the revision, for the region pairs with significant directional effects, we increased the number of permutations to 1000
 ### This script calulates the p-values for the true Granger values using the null distributions from the additional permutations
 
-import matplotlib
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-from scipy import signal, stats
-import re
 import os
-import mne
-import mne_connectivity
-import IPython
-import seaborn as sns
-import scipy
-import joblib
-import h5io
-import dask.array as da 
-import itertools
+import numpy as np
+import pandas as pd
+from pandas.errors import ParserError
 import sys
-import statsmodels
-from statsmodels import stats
-from statsmodels.stats import multitest
-
-from plotnine import (
-    ggplot,
-    aes,
-    geom_line,
-    facet_wrap,
-    labs,
-    geom_hline,
-    element_text,
-    scale_alpha_manual,
-    scale_color_manual,
-    theme,
-    ggtitle
-)
-
 # custom scripts
 sys.path.append('/home/brooke/pacman/connectivity/scripts/turnaround_coherence')
 from connectivity_functions import *
@@ -53,14 +23,18 @@ def compute_pvals_for_group(group):
     """
     # group.name is now a tuple (pair, time)
     pair, time = group.name
-    dist_sorted = null_distributions[(pair, time)]
-    # Compute the absolute granger values
-    vals = np.abs(group['granger'].to_numpy())
-    # Use searchsorted to determine the number of null values greater than each true value
-    idx = np.searchsorted(dist_sorted, vals, side='right')
-    count_greater = len(dist_sorted) - idx
-    # Use .loc to avoid potential SettingWithCopyWarning
-    group.loc[:, 'pval'] = count_greater / len(dist_sorted)
+    exists = (pair, time) in null_distributions
+    if exists is not False:
+        dist_sorted = null_distributions[(pair, time)]
+        # Compute the absolute granger values
+        vals = np.abs(group['granger'].to_numpy())
+        # Use searchsorted to determine the number of null values greater than each true value
+        idx = np.searchsorted(dist_sorted, vals, side='right')
+        count_greater = len(dist_sorted) - idx
+        # Use .loc to avoid potential SettingWithCopyWarning
+        group.loc[:, 'pval'] = count_greater / len(dist_sorted)
+    else:
+        group.loc[:, 'pval'] = np.nan
     return group
 
 
@@ -107,7 +81,8 @@ for subject in granger['subject'].unique():
         all_sub_true_granger = pd.concat([all_sub_true_granger, sub_true_granger])
 
 
+
 ## save out
-all_sub_true_granger.to_csv('/home/brooke/pacman/connectivity/ieeg/granger/all_subs_sig_roi_true_granger_dir_additional_perms.csv', index=False)
+all_sub_true_granger.to_csv('/home/brooke/pacman/connectivity/ieeg/granger/.csv', index=False)
 
 
